@@ -129,12 +129,13 @@
 
 
 import { useState } from "react";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "../../firebase/firebase";
+import { addProduct } from "../../services/productService";
+import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 function AddProduct() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const [product, setProduct] = useState({
     name: "",
@@ -143,6 +144,8 @@ function AddProduct() {
     quantity: "",
     description: "",
   });
+  
+  const [imageFile, setImageFile] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -152,26 +155,35 @@ function AddProduct() {
       [e.target.name]: e.target.value,
     });
   };
+  
+  const handleImageChange = (e) => {
+    if (e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+        alert("You must be logged in to add a product.");
+        return;
+    }
 
     setLoading(true);
 
     try {
-      await addDoc(collection(db, "products"), {
+      await addProduct({
         ...product,
         price: Number(product.price),
         quantity: Number(product.quantity),
-        createdAt: new Date(),
-      });
+      }, imageFile, currentUser.uid);
 
-      alert("✅ Product Added Successfully!");
+      alert("Product Added Successfully!");
 
       navigate("/farmer-dashboard");
     } catch (error) {
       console.error("Firebase Error:", error);
-      alert("❌ " + error.message);
+      alert("Error: " + error.message);
     }
 
     setLoading(false);
@@ -274,6 +286,20 @@ function AddProduct() {
               />
             </div>
 
+          </div>
+
+          {/* Image */}
+          <div>
+            <label className="block font-semibold text-gray-700 mb-2">
+              Product Image
+            </label>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full border border-gray-300 rounded-xl p-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
           </div>
 
           {/* Description */}

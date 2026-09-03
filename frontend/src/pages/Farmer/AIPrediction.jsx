@@ -7,37 +7,44 @@ function AIPrediction() {
 
   const [result, setResult] = useState(null);
 
-  const predictPrice = () => {
+  const [loading, setLoading] = useState(false);
 
-    let prediction = {};
-
-    if (crop === "Tomato") {
-      prediction = {
-        price: "₹48 / Kg",
-        demand: "High",
-        recommendation: "Sell Now",
-      };
-    } else if (crop === "Potato") {
-      prediction = {
-        price: "₹32 / Kg",
-        demand: "Medium",
-        recommendation: "Store for 1 Week",
-      };
-    } else if (crop === "Mango") {
-      prediction = {
-        price: "₹125 / Kg",
-        demand: "Very High",
-        recommendation: "Sell Immediately",
-      };
-    } else {
-      prediction = {
-        price: "₹55 / Kg",
-        demand: "Normal",
-        recommendation: "Normal Market",
-      };
+  const predictPrice = async () => {
+    if (!crop || !district || !month) {
+        alert("Please select all fields.");
+        return;
     }
-
-    setResult(prediction);
+    
+    setLoading(true);
+    try {
+        const response = await fetch("http://localhost:8000/api/predict-price", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                product: crop,
+                season: month,
+                quantity: 1, // Defaulting for prediction
+                location: district
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+            setResult({
+                price: `Rs ${data.suggested_selling_price} / Kg`,
+                demand: data.price_trend === "increasing" ? "High" : "Medium",
+                recommendation: `Estimated Market Price: Rs ${data.estimated_market_price} / Kg. Trend: ${data.price_trend}.`
+            });
+        }
+    } catch (error) {
+        console.error("Error fetching prediction:", error);
+        alert("Failed to fetch prediction from backend.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
@@ -105,9 +112,10 @@ function AIPrediction() {
 
           <button
             onClick={predictPrice}
-            className="bg-green-700 text-white px-8 py-3 rounded-lg hover:bg-green-800"
+            disabled={loading}
+            className="bg-green-700 text-white px-8 py-3 rounded-lg hover:bg-green-800 disabled:bg-gray-400"
           >
-            Predict Price
+            {loading ? "Predicting..." : "Predict Price"}
           </button>
 
         </div>
