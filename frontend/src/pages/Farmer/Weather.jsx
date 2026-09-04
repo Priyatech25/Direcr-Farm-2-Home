@@ -5,13 +5,43 @@ import {
   FaWind,
   FaCloudRain,
 } from "react-icons/fa";
+import { useState, useEffect } from "react";
 
 function Weather() {
+  const [weatherData, setWeatherData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/weather");
+        const data = await response.json();
+        if (data.status === "success") {
+          setWeatherData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching weather:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, []);
+
+  if (loading) {
+    return <div className="p-8">Loading Weather...</div>;
+  }
+
+  if (!weatherData) {
+    return <div className="p-8">Error loading weather data.</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
 
       <h1 className="text-4xl font-bold text-green-700 mb-8">
-        🌦 Weather Dashboard
+        Farm Weather Dashboard
       </h1>
 
       {/* Today's Weather */}
@@ -28,20 +58,27 @@ function Weather() {
           <div>
 
             <h2 className="text-3xl font-bold">
-              Chikkamagaluru
+              {weatherData.location}
             </h2>
 
-            <p className="text-gray-500">
-              Karnataka, India
-            </p>
-
             <h1 className="text-5xl font-bold mt-3">
-              28°C
+              {weatherData.temperature}°C
             </h1>
 
             <p className="text-lg text-gray-600">
-              Partly Cloudy
+              {weatherData.weather_condition}
             </p>
+            
+            {weatherData.suggestions && weatherData.suggestions.length > 0 && (
+                <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded text-blue-700">
+                    <p className="font-semibold">AI Farm Suggestions:</p>
+                    <ul className="list-disc ml-5">
+                        {weatherData.suggestions.map((suggestion, index) => (
+                            <li key={index}>{suggestion}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
           </div>
 
@@ -64,7 +101,7 @@ function Weather() {
           </h3>
 
           <h1 className="text-3xl font-bold">
-            28°C
+            {weatherData.temperature}°C
           </h1>
 
         </div>
@@ -80,7 +117,7 @@ function Weather() {
           </h3>
 
           <h1 className="text-3xl font-bold">
-            74%
+            {weatherData.humidity}%
           </h1>
 
         </div>
@@ -96,7 +133,7 @@ function Weather() {
           </h3>
 
           <h1 className="text-3xl font-bold">
-            12 km/h
+            {weatherData.wind_speed} km/h
           </h1>
 
         </div>
@@ -112,86 +149,10 @@ function Weather() {
           </h3>
 
           <h1 className="text-3xl font-bold">
-            60%
+            {weatherData.rain_probability}%
           </h1>
 
         </div>
-
-      </div>
-
-      {/* Forecast */}
-
-      <div className="bg-white rounded-xl shadow-lg mt-8 p-8">
-
-        <h2 className="text-2xl font-bold mb-5">
-          📅 5-Day Forecast
-        </h2>
-
-        <table className="w-full">
-
-          <thead className="bg-green-700 text-white">
-
-            <tr>
-
-              <th className="p-3">Day</th>
-              <th>Weather</th>
-              <th>Temperature</th>
-              <th>Rain</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            <tr className="border-b text-center">
-
-              <td className="p-3">Monday</td>
-              <td>☀ Sunny</td>
-              <td>29°C</td>
-              <td>10%</td>
-
-            </tr>
-
-            <tr className="border-b text-center">
-
-              <td className="p-3">Tuesday</td>
-              <td>🌤 Cloudy</td>
-              <td>27°C</td>
-              <td>30%</td>
-
-            </tr>
-
-            <tr className="border-b text-center">
-
-              <td className="p-3">Wednesday</td>
-              <td>🌧 Rain</td>
-              <td>25°C</td>
-              <td>80%</td>
-
-            </tr>
-
-            <tr className="border-b text-center">
-
-              <td className="p-3">Thursday</td>
-              <td>🌦 Rain</td>
-              <td>24°C</td>
-              <td>75%</td>
-
-            </tr>
-
-            <tr className="text-center">
-
-              <td className="p-3">Friday</td>
-              <td>☀ Sunny</td>
-              <td>30°C</td>
-              <td>5%</td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
 
       </div>
 

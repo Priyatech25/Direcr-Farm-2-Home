@@ -1,19 +1,45 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Check if Firebase credentials are present
+const hasFirebaseConfig =
+  firebaseConfig.apiKey &&
+  firebaseConfig.apiKey !== "undefined" &&
+  firebaseConfig.projectId &&
+  firebaseConfig.projectId !== "undefined";
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+let app = null;
+let db = null;
+let auth = null;
+let storage = null;
 
+if (hasFirebaseConfig) {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    storage = getStorage(app);
+    console.log("✅ Firebase initialized successfully.");
+  } catch (error) {
+    console.warn("⚠️ Firebase initialization failed:", error.message);
+  }
+} else {
+  console.warn(
+    "⚠️ Firebase credentials are missing. " +
+    "Create a frontend/.env file from .env.example to enable Firebase features."
+  );
+}
+
+export { db, auth, storage };
 export default app;
